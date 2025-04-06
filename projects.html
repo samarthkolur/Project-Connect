@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Project Connect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=League+Spartan:wght@100..900&family=Lexend+Zetta:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        .project-details-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .project-details-content {
+            background: var(--secondary-color);
+            border-radius: 50px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 30px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .close-modal:hover {
+            transform: scale(1.2);
+            color: red;
+        }
+
+        #modalProjectTitle {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        #modalProjectDescription {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        #modalProjectMeta, #modalProjectSkills {
+            background-color: var(--hover-color);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        #modalProjectActions {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        #modalProjectActions button {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border-radius: 50px;
+            transition: background-color 0.3s ease;
+        }
+
+        #modalProjectActions button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">
+                <a href="home.html">Pro-Con</a>
+            </div>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link">Dashboard</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+                <a href="projects.html" class="nav-link active">Projects</a>
+                <button class="theme-toggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <span class="user-usn" id="userUSN"></span>
+                <button id="logoutBtn" class="btn">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="projects-main">
+        <div class="container">
+            <!-- Create Project Button -->
+            <section class="create-project-section">
+                <button class="btn btn-primary create-project-btn" onclick="window.location.href='create-project.html'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Create New Project
+                </button>
+            </section>
+
+            <!-- Projects View Toggle -->
+            <div class="projects-toggle">
+                <button class="toggle-btn active" data-view="my">My Projects</button>
+                <button class="toggle-btn" data-view="global">Global Projects</button>
+            </div>
+
+            <!-- Projects Display -->
+            <div class="projects-container">
+                <!-- My Projects View -->
+                <div id="myProjects" class="projects-view active">
+                    <div class="projects-grid">
+                        <!-- User projects will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Global Projects View -->
+                <div id="globalProjects" class="projects-view">
+                    <div class="projects-grid">
+                        <!-- Global projects will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase Auth Check and Data Fetching -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            where, 
+            getDocs, 
+            orderBy, 
+            doc, 
+            getDoc, 
+            updateDoc, 
+            addDoc, 
+            setDoc, 
+            increment
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPyjadBJyq7-a6dafrTeqXsAX9CaW0wIg",
+            authDomain: "jecthub-8bfbe.firebaseapp.com",
+            projectId: "jecthub-8bfbe",
+            storageBucket: "jecthub-8bfbe.firebasestorage.app",
+            messagingSenderId: "732606193362",
+            appId: "1:732606193362:web:a092e1c6c0727d8739570b",
+            measurementId: "G-BDCJTL5W8C"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global variable to store current project details
+        let currentProjectDetails = null;
+
+        // Function to open project details modal
+        window.openProjectDetails = async function(projectId, isUserProject) {
+            try {
+                // Determine the collection based on whether it's a user project or global project
+                const collectionPath = isUserProject 
+                    ? `userProjects/${auth.currentUser.uid}/projects` 
+                    : 'projects';
+
+                // Fetch project details
+                const projectDocRef = doc(db, collectionPath, projectId);
+                const projectDoc = await getDoc(projectDocRef);
+                
+                if (!projectDoc.exists()) {
+                    console.error('Project not found');
+                    return;
+                }
+
+                // Store current project details
+                currentProjectDetails = {
+                    ...projectDoc.data(),
+                    id: projectDocRef.id,
+                    isUserProject
+                };
+
+                // Populate modal
+                document.getElementById('modalProjectTitle').textContent = currentProjectDetails.title;
+                document.getElementById('modalProjectDescription').textContent = currentProjectDetails.description;
+                
+                // Meta information
+                const metaHTML = `
+                    <p>Work Mode: ${currentProjectDetails.workMode}</p>
+                    <p>Members: ${currentProjectDetails.numberOfMembers + 1}</p>
+                    <p>Created At: ${new Date(currentProjectDetails.createdAt.seconds * 1000).toLocaleDateString()}</p>
+                    <p>Creator USN: ${currentProjectDetails.usn}</p>
+                `;
+                document.getElementById('modalProjectMeta').innerHTML = metaHTML;
+
+                // Skills
+                const skillsHTML = currentProjectDetails.skills 
+                    ? `<p>Required Skills: ${currentProjectDetails.skills.join(', ')}</p>`
+                    : '';
+                document.getElementById('modalProjectSkills').innerHTML = skillsHTML;
+
+                // Action buttons
+                const actionsContainer = document.getElementById('modalProjectActions');
+                actionsContainer.innerHTML = ''; // Clear previous actions
+
+                if (isUserProject) {
+                    // For user's own projects, show review applications
+                    const reviewButton = document.createElement('button');
+                    reviewButton.textContent = 'Review Applications';
+                    reviewButton.className = 'btn';
+                    reviewButton.onclick = openReviewApplications;
+                    actionsContainer.appendChild(reviewButton);
+                } else {
+                    // For global projects, show apply button
+                    const applyButton = document.createElement('button');
+                    applyButton.textContent = 'Apply to Project';
+                    applyButton.className = 'btn btn-primary';
+                    applyButton.onclick = applyToProject;
+                    actionsContainer.appendChild(applyButton);
+                }
+
+                // Show modal
+                document.getElementById('projectDetailsModal').style.display = 'flex';
+            } catch (error) {
+                console.error('Error opening project details:', error);
+            }
+        };
+
+        // Function to apply to a project
+        async function applyToProject() {
+            if (!currentProjectDetails) return;
+
+            try {
+                const user = auth.currentUser;
+                
+                // Add application to project's applications subcollection
+                const applicationsRef = collection(
+                    db, 
+                    'projects', 
+                    currentProjectDetails.id, 
+                    'applications'
+                );
+
+                await addDoc(applicationsRef, {
+                    userId: user.uid,
+                    userUSN: user.displayName, // Assuming displayName is USN
+                    status: 'pending',
+                    appliedAt: new Date()
+                });
+
+                alert('Application submitted successfully!');
+                closeProjectDetailsModal();
+            } catch (error) {
+                console.error('Error applying to project:', error);
+                alert('Failed to submit application');
+            }
+        }
+
+        // Function to open review applications
+        async function openReviewApplications() {
+            if (!currentProjectDetails) return;
+
+            try {
+                // Fetch applications for this project
+                const applicationsQuery = query(
+                    collection(db, 'projects', currentProjectDetails.id, 'applications'),
+                    where('status', '==', 'pending')
+                );
+
+                const applicationsSnapshot = await getDocs(applicationsQuery);
+
+                // Clear and populate modal with applications
+                const actionsContainer = document.getElementById('modalProjectActions');
+                actionsContainer.innerHTML = '<h3>Pending Applications</h3>';
+
+                if (applicationsSnapshot.empty) {
+                    actionsContainer.innerHTML += '<p>No pending applications.</p>';
+                    return;
+                }
+
+                applicationsSnapshot.forEach(async (applicationDoc) => {
+                    const application = applicationDoc.data();
+                    const applicationDiv = document.createElement('div');
+                    applicationDiv.innerHTML = `
+                        <p>USN: ${application.userUSN}</p>
+                        <button onclick="approveApplication('${applicationDoc.id}')">Approve</button>
+                        <button onclick="rejectApplication('${applicationDoc.id}')">Reject</button>
+                    `;
+                    actionsContainer.appendChild(applicationDiv);
+                });
+            } catch (error) {
+                console.error('Error fetching applications:', error);
+            }
+        }
+
+        // Attach these to window for onclick events
+        window.approveApplication = async function(applicationId) {
+            if (!currentProjectDetails) return;
+
+            try {
+                // Check if project has space for more members
+                const canAddMember = await checkProjectMemberLimit(currentProjectDetails.id);
+                
+                if (!canAddMember) {
+                    alert('Project has reached maximum member limit');
+                    return;
+                }
+
+                // Existing application reference
+                const applicationRef = doc(
+                    db, 
+                    'projects', 
+                    currentProjectDetails.id, 
+                    'applications', 
+                    applicationId
+                );
+
+                // Get application data
+                const applicationDoc = await getDoc(applicationRef);
+                const applicationData = applicationDoc.data();
+
+                // Add member to project's members subcollection
+                const memberRef = doc(
+                    db, 
+                    'projects', 
+                    currentProjectDetails.id, 
+                    'members', 
+                    applicationData.userId
+                );
+
+                await setDoc(memberRef, {
+                    usn: applicationData.userUSN,
+                    role: 'Member',
+                    joinedAt: new Date()
+                });
+
+                // Update application status
+                await updateDoc(applicationRef, { 
+                    status: 'approved',
+                    approvedAt: new Date()
+                });
+
+                // Update project's member count
+                alert('Application approved!');
+                openReviewApplications(); // Refresh applications
+            } catch (error) {
+                console.error('Error approving application:', error);
+            }
+        };
+
+        window.rejectApplication = async function(applicationId) {
+            if (!currentProjectDetails) return;
+
+            try {
+                // Update application status
+                const applicationRef = doc(
+                    db, 
+                    'projects', 
+                    currentProjectDetails.id, 
+                    'applications', 
+                    applicationId
+                );
+
+                await updateDoc(applicationRef, { status: 'rejected' });
+
+                alert('Application rejected.');
+                openReviewApplications(); // Refresh applications
+            } catch (error) {
+                console.error('Error rejecting application:', error);
+            }
+        };
+
+        // Close modal function
+        window.closeProjectDetailsModal = function() {
+            document.getElementById('projectDetailsModal').style.display = 'none';
+            currentProjectDetails = null;
+        };
+
+        // Modify createProjectCard function
+        function createProjectCard(project, projectId, isUserProject) {
+            // Add console log to check project data
+            console.log('Project Data:', project);
+
+            // Fallback for USN
+            const projectUsn = project.usn || project.creatorUsn || 'Unknown USN';
+
+            const card = document.createElement('div');
+            card.className = 'card bg-primary text-primary-content w-96';
+            card.innerHTML = `
+                <div class="card-body">
+                    <h2 class="card-title">Project by ${projectUsn}</h2>
+                    <p>${project.description}</p>
+                    <p><strong>Members:</strong> ${(project.numberOfMembers || 0) + 1}</p>
+                    <p><strong>Work Mode:</strong> ${project.workMode || 'Not Specified'}</p>
+                    <p><strong>Created At:</strong> ${project.createdAt ? new Date(project.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown Date'}</p>
+                    <p><strong>Creator USN:</strong> ${projectUsn}</p>
+                    <p><strong>Visibility:</strong> ${project.visibility === 'public' ? 'Public' : 'Private'}</p>
+                    <div class="card-actions justify-end">
+                        <button onclick="window.openProjectDetails('${projectId}', ${isUserProject})" class="btn">View Details</button>
+                    </div>
+                </div>
+            `;
+            
+            if (isUserProject) {
+                const indicator = document.createElement('div');
+                indicator.className = 'project-indicator';
+                indicator.textContent = 'Your Project';
+                indicator.style.textAlign = 'center';
+                indicator.style.backgroundColor = 'green';
+                indicator.style.color = 'white';
+                indicator.style.padding = '0.5rem';
+                indicator.style.marginBottom = '0.5rem';
+                indicator.style.borderRadius = '1.5rem';
+                card.prepend(indicator);
+            }
+            return card;
+        }
+
+        // Check authentication
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Ensure USN is set in display name during signup/profile creation
+            if (!user.displayName) {
+                // Fetch user document to get USN
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    user.displayName = userData.usn || 'Unknown';
+                }
+            }
+
+            // Display USN
+            document.getElementById('userUSN').textContent = user.displayName || 'USN';
+
+            // Load User Projects
+            const userId = auth.currentUser.uid; // Get the c   urrent user's ID
+            const userProjectsQuery = query(
+                collection(db, "userProjects", userId, "projects")
+            );
+
+            try {
+                // Fetch user projects
+                const userProjectsSnapshot = await getDocs(userProjectsQuery);
+                if (userProjectsSnapshot.empty) {
+                    // No projects found
+                    document.querySelector('#myProjects .projects-grid').innerHTML = '<p>No projects found.</p>';
+                } else {
+                    // Display user projects
+                    userProjectsSnapshot.forEach(doc => {
+                        const project = doc.data();
+                        console.log("Project Data:", project); // Debugging line
+                        const projectCard = createProjectCard(project, doc.id, true); // Pass user project
+                        document.querySelector('#myProjects .projects-grid').appendChild(projectCard);
+                    });
+                }
+
+                // Load Global Projects
+                const globalProjectsQuery = query(
+                    collection(db, "projects"),
+                    where("visibility", "==", "public"),
+                    orderBy("createdAt", "desc")
+                );
+
+                // Fetch and display global projects
+                const globalProjectsSnapshot = await getDocs(globalProjectsQuery);
+                displayProjects(globalProjectsSnapshot, 'globalProjects');
+
+            } catch (error) {
+                console.error("Error loading projects:", error);
+            }
+        });
+
+        // Display projects function
+        function displayProjects(snapshot, containerId) {
+            const container = document.querySelector(`#${containerId} .projects-grid`);
+            container.innerHTML = '';
+
+            snapshot.forEach(doc => {
+                const project = doc.data();
+                const projectCard = createProjectCard(project, doc.id, false); // Pass global project
+                container.appendChild(projectCard);
+            });
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                console.log('User signed out successfully');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout Error:', error);
+            }
+        });
+    </script>
+
+    <!-- Toggle View Script -->
+    <script>
+        const toggleBtns = document.querySelectorAll('.toggle-btn');
+        const projectViews = document.querySelectorAll('.projects-view');
+
+        toggleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.dataset.view;
+                
+                // Toggle active states
+                toggleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update views
+                projectViews.forEach(v => v.classList.remove('active'));
+                document.getElementById(`${view}Projects`).classList.add('active');
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.querySelector('.theme-toggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Check for saved theme preference or use system preference
+            const currentTheme = localStorage.getItem('theme') || 
+                                (prefersDarkScheme.matches ? 'dark' : 'light');
+            
+            // Set initial theme
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            // Theme toggle click handler
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.getAttribute('data-theme') === 'light' 
+                                ? 'dark' 
+                                : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        });
+    </script>
+
+    <!-- Add this modal just before the closing </body> tag -->
+    <div id="projectDetailsModal" class="project-details-modal">
+        <div class="project-details-content">
+            <button class="close-modal" onclick="closeProjectDetailsModal()" aria-label="Close">
+                &#10005;
+            </button>
+            <h2 id="modalProjectTitle"></h2>
+            <p id="modalProjectDescription"></p>
+            <div id="modalProjectMeta"></div>
+            <div id="modalProjectSkills"></div>
+            <div id="modalProjectActions"></div>
+        </div>
+    </div>
+</body>
+</html>
+

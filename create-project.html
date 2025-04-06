@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Project - Project Connect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=League+Spartan:wght@100..900&family=Lexend+Zetta:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">
+                <a href="home.html">Pro-Con</a>
+            </div>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link">Dashboard</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+                <a href="projects.html" class="nav-link">Projects</a>
+                <button class="theme-toggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <span class="user-usn" id="userUSN"></span>
+                <button id="logoutBtn" class="btn">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="create-project-main">
+        <div class="container">
+            <section class="create-project-section">
+                <h1>Create a New Project</h1>
+                <div class="form-box">
+                    <form id="createProjectForm" class="create-project-form">
+                        <div class="form-group">
+                            <label for="projectTitle">Project Title</label>
+                            <input type="text" id="projectTitle" name="projectTitle" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectDescription">Description</label>
+                            <textarea id="projectDescription" name="projectDescription" class="form-control" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="numberOfMembers">Number of Members</label>
+                            <input type="number" id="numberOfMembers" name="numberOfMembers" class="form-control" value="1" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="skillsNeeded">Skills Needed</label>
+                            <div id="skillsContainer">
+                                <div class="skill-input">
+                                    <input type="text" id="skillsNeeded" name="skillsNeeded" class="form-control" placeholder="Enter a skill">
+                                    <button type="button" class="remove-skill-btn" aria-label="Remove skill">-</button>
+                                </div>
+
+                            </div>
+                            <button type="button" id="addSkillBtn" class="btn">Add Skill</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Work Mode</label>
+                            <div>
+                                <label><input type="radio" name="workMode" value="online" checked> Online</label>
+                                <label><input type="radio" name="workMode" value="offline"> Offline</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="reset" class="btn">Reset</button>
+                        </div>
+                    </form>
+                    <div id="errorMessage" class="error-message"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            collection,
+            getDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPyjadBJyq7-a6dafrTeqXsAX9CaW0wIg",
+            authDomain: "jecthub-8bfbe.firebaseapp.com",
+            projectId: "jecthub-8bfbe",
+            storageBucket: "jecthub-8bfbe.firebasestorage.app",
+            messagingSenderId: "732606193362",
+            appId: "1:732606193362:web:a092e1c6c0727d8739570b",
+            measurementId: "G-BDCJTL5W8C"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Variable to store user details
+        let currentUserDetails = null;
+
+        // Check authentication
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                // Fetch user details from Firestore
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    currentUserDetails = {
+                        ...user,
+                        ...userDoc.data()
+                    };
+
+                    // Update USN in nav
+                    document.getElementById('userUSN').textContent = 
+                        currentUserDetails.usn || 
+                        currentUserDetails.displayName || 
+                        'Unknown USN';
+                }
+
+                // Handle project creation
+                document.getElementById('createProjectForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    // Ensure user details are loaded
+                    if (!currentUserDetails) {
+                        alert('User details not loaded. Please try again.');
+                        return;
+                    }
+
+                    const title = e.target.projectTitle.value;
+                    const description = e.target.projectDescription.value;
+                    const numberOfMembers = e.target.numberOfMembers.value;
+                    const skillsNeeded = Array.from(
+                        document.querySelectorAll('#skillsContainer input[type="text"]')
+                    ).map(input => input.value).filter(skill => skill);
+                    const workMode = e.target.workMode.value;
+
+                    try {
+                        const projectData = {
+                            title,
+                            description,
+                            numberOfMembers: parseInt(numberOfMembers) - 1, // Exclude the user
+                            skills: skillsNeeded,
+                            workMode,
+                            createdAt: new Date(),
+                            visibility: "public",
+                            usn: currentUserDetails.usn || currentUserDetails.displayName || 'Unknown USN',
+                            creatorId: currentUserDetails.uid
+                        };
+
+                        // Save to user-specific collection
+                        const userProjectRef = doc(
+                            db, 
+                            "userProjects", 
+                            currentUserDetails.uid, 
+                            "projects", 
+                            title
+                        );
+                        await setDoc(userProjectRef, projectData);
+
+                        // Save to global projects collection
+                        const globalProjectRef = doc(db, "projects", title);
+                        await setDoc(globalProjectRef, projectData);
+
+                        alert("Project created successfully!");
+                        window.location.href = 'projects.html';
+                    } catch (error) {
+                        console.error("Project creation error:", error);
+                        document.getElementById('errorMessage').textContent = 
+                            error.message || "Failed to create project";
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error fetching user details:", error);
+                alert('Failed to load user details');
+            }
+        });
+
+        // Add skill input functionality
+        document.getElementById('addSkillBtn').addEventListener('click', () => {
+            const skillInput = document.createElement('div');
+            skillInput.className = 'skill-input';
+            skillInput.innerHTML = `
+                <input type="text" class="form-control" placeholder="Enter another skill">
+                <button type="button" class="remove-skill-btn" aria-label="Remove skill">-</button>
+            `;
+            document.getElementById('skillsContainer').appendChild(skillInput);
+
+            // Add event listener to remove button
+            skillInput.querySelector('.remove-skill-btn').addEventListener('click', () => {
+                skillInput.remove();
+            });
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                console.log('User signed out successfully');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout Error:', error);
+            }
+        });
+    </script>
+
+    <script>
+        // Theme toggle script
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.querySelector('.theme-toggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Check for saved theme preference or use system preference
+            const currentTheme = localStorage.getItem('theme') || 
+                                (prefersDarkScheme.matches ? 'dark' : 'light');
+            
+            // Set initial theme
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            // Theme toggle click handler
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.getAttribute('data-theme') === 'light' 
+                                ? 'dark' 
+                                : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        });
+    </script>
+</body>
+</html>
+

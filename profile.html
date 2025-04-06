@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Project Connect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=League+Spartan:wght@100..900&family=Lexend+Zetta:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">
+                <a href="home.html">Pro-Con</a>
+            </div>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link">Dashboard</a>
+                <a href="profile.html" class="nav-link active">Profile</a>
+                <a href="projects.html" class="nav-link">Projects</a>
+                <button class="theme-toggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <span class="user-usn" id="userUSN"></span>
+                <button id="logoutBtn" class="btn">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="profile-card">
+        <div class="profile-overview">
+            <img src="profile.png" alt="Profile Picture" class="profile-picture" />
+            <h2 id="userName">John Doe</h2>
+            <p id="userId">Student ID: 123456</p>
+            <button id="editButton" class="themed-btn" onclick="toggleEditMode()">Edit</button>
+        </div>
+        <div class="details-section">
+            <div class="detail">
+                <label for="fullName">Full Name:<span style="color: red;">*</span></label>
+                <input type="text" id="fullName" value="nil" disabled />
+            </div>
+            <div class="detail">
+                <label for="email">Email Address:<span style="color: red;">*</span></label>
+                <input type="email" id="email" value="nil" disabled />
+            </div>
+            <div class="detail">
+                <label for="phone">Phone Number:<span style="color: red;">*</span></label>
+                <input type="tel" id="phone" value="nil" disabled />
+            </div>
+            <div class="detail">
+                <label for="address">Address:</label>
+                <input type="text" id="address" value="nil" disabled />
+            </div>
+            <div class="detail">
+                <label for="program">Program/Department:<span style="color: red;">*</span></label>
+                <input type="text" id="program" value="nil" disabled />
+            </div>
+            <div class="detail">
+                <label for="year">Year of Study:<span style="color: red;">*</span></label>
+                <input type="number" id="year" value="nil" disabled min="1" max="4" />
+            </div>
+            <div class="button-group">
+                <button id="saveButton" class="themed-btn" onclick="saveChanges()" style="display:none;">Save</button>
+                <button id="cancelButton" class="themed-btn" onclick="cancelEdit()" style="display:none;">Cancel</button>
+            </div>
+            <div id="error-message" style="color: red; display: none;"></div>
+        </div>
+    </div>
+    <footer class="footer">
+        <div class="container">
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Project Connect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <!-- Firebase Auth Check and Data Fetching -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPyjadBJyq7-a6dafrTeqXsAX9CaW0wIg",
+            authDomain: "jecthub-8bfbe.firebaseapp.com",
+            projectId: "jecthub-8bfbe",
+            storageBucket: "jecthub-8bfbe.firebasestorage.app",
+            messagingSenderId: "732606193362",
+            appId: "1:732606193362:web:a092e1c6c0727d8739570b",
+            measurementId: "G-BDCJTL5W8C"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Function to load user details
+        async function loadUserDetails() {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    console.error('No authenticated user');
+                    return;
+                }
+
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    console.log('Loaded User Data:', userData);
+
+                    // Update input fields
+                    document.getElementById('fullName').value = userData.fullName || 'nil';
+                    document.getElementById('email').value = userData.email || 'nil';
+                    document.getElementById('phone').value = userData.phone || 'nil';
+                    document.getElementById('address').value = userData.address || 'nil';
+                    document.getElementById('program').value = userData.program || 'nil';
+                    document.getElementById('year').value = userData.year || 'nil';
+
+                    // Update display name and USN
+                    document.getElementById('userName').textContent = userData.fullName || 'John Doe';
+                    document.getElementById('userId').textContent = `Student ID: ${userData.usn || 'N/A'}`;
+
+                    // Update USN in nav bar
+                    const userUSNElement = document.getElementById('userUSN');
+                    if (userUSNElement) {
+                        userUSNElement.textContent = userData.usn || 'USN';
+                    }
+                } else {
+                    console.warn('No user document found');
+                }
+            } catch (error) {
+                console.error('Error loading user details:', error);
+            }
+        }
+
+        // Attach loadUserDetails to window to make it globally accessible
+        window.loadUserDetails = loadUserDetails;
+
+        // Authentication state observer
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+
+                    // Update USN in nav bar
+                    const userUSNElement = document.getElementById('userUSN');
+                    if (userUSNElement) {
+                        userUSNElement.textContent = userData.usn || 'USN';
+                    }
+                }
+
+                // Load user details
+                await loadUserDetails();
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        });
+
+        // Save Changes Function
+        async function saveChanges() {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    throw new Error('No authenticated user found');
+                }
+
+                // Prepare user data object
+                const userData = {
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    address: document.getElementById('address').value || '',
+                    program: document.getElementById('program').value,
+                    year: parseInt(document.getElementById('year').value),
+                    usn: document.getElementById('userId').textContent.replace('Student ID: ', '')
+                };
+
+                console.log('Saving user data:', userData);
+
+                // Reference to user document in Firestore
+                const userDocRef = doc(db, "users", user.uid);
+
+                // Update document in Firestore
+                await setDoc(userDocRef, userData, { merge: true });
+
+                // Reload user details to confirm update
+                await loadUserDetails();
+
+                // Disable inputs
+                const details = document.querySelectorAll('.detail input');
+                details.forEach(input => {
+                    input.disabled = true;
+                });
+
+                // Hide save and cancel buttons, show edit button
+                document.getElementById('saveButton').style.display = 'none';
+                document.getElementById('cancelButton').style.display = 'none';
+                document.getElementById('editButton').style.display = 'inline-block';
+
+                // Show success message
+                errorMessage.textContent = 'Profile updated successfully!';
+                errorMessage.style.color = 'green';
+                errorMessage.style.display = 'block';
+
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error saving user data:', error);
+                errorMessage.textContent = `Error saving data: ${error.message}`;
+                errorMessage.style.color = 'red';
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // Attach the saveChanges function to the window object
+        window.saveChanges = saveChanges;
+    </script>
+
+    <!-- Toggle View Script -->
+    <script>
+        const toggleBtns = document.querySelectorAll('.toggle-btn');
+        const projectViews = document.querySelectorAll('.projects-view');
+
+        toggleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.dataset.view;
+                
+                // Toggle active states
+                toggleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update views
+                projectViews.forEach(v => v.classList.remove('active'));
+                document.getElementById(`${view}Projects`).classList.add('active');
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.querySelector('.theme-toggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Check for saved theme preference or use system preference
+            const currentTheme = localStorage.getItem('theme') || 
+                                (prefersDarkScheme.matches ? 'dark' : 'light');
+            
+            // Set initial theme
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            // Theme toggle click handler
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.getAttribute('data-theme') === 'light' 
+                                ? 'dark' 
+                                : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        });
+    </script>
+
+    <script>
+        function toggleEditMode() {
+            const details = document.querySelectorAll('.detail input');
+            const saveButton = document.getElementById('saveButton');
+            const cancelButton = document.getElementById('cancelButton');
+            const editButton = document.getElementById('editButton');
+            const isEditing = details[0].disabled; // Check if currently in edit mode
+
+            // Toggle input disabled state
+            details.forEach(input => {
+                input.disabled = !isEditing; // Enable inputs when not in edit mode
+            });
+
+            // Toggle button visibility
+            if (isEditing) {
+                saveButton.style.display = 'inline-block';
+                cancelButton.style.display = 'inline-block';
+                editButton.style.display = 'none';
+            } else {
+                saveButton.style.display = 'none';
+                cancelButton.style.display = 'none';
+                editButton.style.display = 'inline-block';
+            }
+        }
+
+        function cancelEdit() {
+            // Reload user details to reset fields
+            loadUserDetails();
+
+            // Disable inputs
+            const details = document.querySelectorAll('.detail input');
+            details.forEach(input => {
+                input.disabled = true;
+            });
+
+            // Hide save and cancel buttons, show edit button
+            document.getElementById('saveButton').style.display = 'none';
+            document.getElementById('cancelButton').style.display = 'none';
+            document.getElementById('editButton').style.display = 'inline-block';
+
+            // Hide any error messages
+            document.getElementById('error-message').style.display = 'none';
+        }
+    </script>
+    <script rel="javascript" href="js/profile.js"></script>
+</body>
+</html>
+

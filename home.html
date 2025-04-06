@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Project Connect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=League+Spartan:wght@100..900&family=Lexend+Zetta:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">
+                <a href="home.html">Pro-Con</a>
+            </div>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link active">Dashboard</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+                <a href="projects.html" class="nav-link">Projects</a>
+                <button class="theme-toggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <span class="user-usn" id="userUSN"></span>
+                <button id="logoutBtn" class="btn">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <section class="welcome-section">
+                <h1>Welcome, <span id="userName">Student</span></h1>
+                <p class="last-login">Last login: <span id="lastLoginTime">Loading...</span></p>
+            </section>
+
+            <div class="dashboard-grid">
+                <!-- Quick Stats -->
+                <section class="dashboard-card stats-card">
+                    <h2>Quick Stats</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <h3>Active Projects</h3>
+                            <p class="stat-number">3</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>Completed</h3>
+                            <p class="stat-number">5</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>Achievements</h3>
+                            <p class="stat-number">8</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Activity -->
+                <section class="dashboard-card activity-card">
+                    <h2>Recent Activity</h2>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <p>Project proposal approved</p>
+                            <small>2 hours ago</small>
+                        </div>
+                        <div class="activity-item">
+                            <p>New team member joined</p>
+                            <small>Yesterday</small>
+                        </div>
+                        <div class="activity-item">
+                            <p>Milestone completed</p>
+                            <small>3 days ago</small>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Upcoming Deadlines -->
+                <section class="dashboard-card deadlines-card">
+                    <h2>Upcoming Deadlines</h2>
+                    <div class="deadline-list">
+                        <div class="deadline-item">
+                            <h3>Project Presentation</h3>
+                            <p>Due in 2 days</p>
+                        </div>
+                        <div class="deadline-item">
+                            <h3>Code Review</h3>
+                            <p>Due in 5 days</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="dashboard-card actions-card">
+                    <h2>Quick Actions</h2>
+                    <div class="actions-grid">
+                        <button class="action-btn" onclick="window.location.href='create-project.html'">New Project</button>
+                        <button class="action-btn">Find Mentor</button>
+                        <button class="action-btn">View Tasks</button>
+                        <button class="action-btn">Team Chat</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Project Connect. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Auth Check -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPyjadBJyq7-a6dafrTeqXsAX9CaW0wIg",
+            authDomain: "jecthub-8bfbe.firebaseapp.com",
+            projectId: "jecthub-8bfbe",
+            storageBucket: "jecthub-8bfbe.firebasestorage.app",
+            messagingSenderId: "732606193362",
+            appId: "1:732606193362:web:a092e1c6c0727d8739570b",
+            measurementId: "G-BDCJTL5W8C"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Function to check if user is authenticated
+        const checkAuth = () => {
+            return new Promise((resolve, reject) => {
+                const unsubscribe = onAuthStateChanged(auth, (user) => {
+                    unsubscribe(); // Unsubscribe once we get the auth state
+                    if (user && user.emailVerified) {
+                        resolve(user);
+                    } else {
+                        reject('User not authenticated or email not verified');
+                    }
+                });
+            });
+        };
+
+        // Initialize page
+        const initializePage = async () => {
+            try {
+                const user = await checkAuth();
+                
+                // Get user data from Firestore
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const userData = userDoc.data();
+
+                if (userData) {
+                    // Update USN display
+                    document.getElementById('userUSN').textContent = userData.usn;
+                    // Update welcome message
+                    document.getElementById('userName').textContent = userData.usn;
+                    document.getElementById('lastLoginTime').textContent = new Date().toLocaleString();
+                } else {
+                    throw new Error('User data not found');
+                }
+
+            } catch (error) {
+                console.error('Auth Error:', error);
+                window.location.href = 'login.html';
+            }
+        };
+
+        // Call initialize function when page loads
+        initializePage();
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                console.log('User signed out successfully');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout Error:', error);
+            }
+        });
+    </script>
+
+    <!-- Theme toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.querySelector('.theme-toggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            const currentTheme = localStorage.getItem('theme') || 
+                                (prefersDarkScheme.matches ? 'dark' : 'light');
+            
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.getAttribute('data-theme') === 'light' 
+                                ? 'dark' 
+                                : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        });
+    </script>
+</body>
+</html>
+

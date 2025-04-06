@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Details - Project Connect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=League+Spartan:wght@100..900&family=Lexend+Zetta:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">
+                <a href="home.html">Pro-Con</a>
+            </div>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link">Dashboard</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+                <a href="projects.html" class="nav-link active">Projects</a>
+                <button class="theme-toggle" aria-label="Toggle theme">
+                    <!-- Theme toggle SVG icons -->
+                    <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <span class="user-usn" id="userUSN"></span>
+                <button id="logoutBtn" class="btn">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="project-details-main container">
+        <div class="project-details-card">
+            <div id="projectDetailsContent">
+                <!-- Project details will be dynamically loaded here -->
+            </div>
+
+            <div id="applicationSection" style="display: none;">
+                <h3>Apply for Project</h3>
+                <textarea id="applicationMessage" placeholder="Write a brief message about why you want to join this project"></textarea>
+                <button id="applyButton" class="btn btn-primary">Submit Application</button>
+            </div>
+
+            <div id="reviewSection" style="display: none;">
+                <h3>Pending Applications</h3>
+                <div id="pendingApplicationsList">
+                    <!-- Pending applications will be dynamically loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            updateDoc, 
+            arrayUnion, 
+            collection, 
+            query, 
+            where, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPyjadBJyq7-a6dafrTeqXsAX9CaW0wIg",
+            authDomain: "jecthub-8bfbe.firebaseapp.com",
+            projectId: "jecthub-8bfbe",
+            storageBucket: "jecthub-8bfbe.firebasestorage.app",
+            messagingSenderId: "732606193362",
+            appId: "1:732606193362:web:a092e1c6c0727d8739570b",
+            measurementId: "G-BDCJTL5W8C"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let projectId = null;
+        let isUserProject = false;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUser = user;
+            document.getElementById('userUSN').textContent = user.displayName;
+
+            // Get project ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            projectId = urlParams.get('id');
+            const source = urlParams.get('source');
+            isUserProject = source === 'myprojects';
+
+            if (projectId) {
+                await loadProjectDetails();
+            }
+        });
+
+        async function loadProjectDetails() {
+            try {
+                const projectRef = doc(db, isUserProject ? 'userProjects' : 'projects', 
+                    isUserProject ? currentUser.uid : 'global', 
+                    'projects', 
+                    projectId
+                );
+                const projectDoc = await getDoc(projectRef);
+
+                if (projectDoc.exists()) {
+                    const projectData = projectDoc.data();
+                    renderProjectDetails(projectData);
+                } else {
+                    console.error('Project not found');
+                }
+            } catch (error) {
+                console.error('Error loading project details:', error);
+            }
+        }
+
+        function renderProjectDetails(project) {
+            const detailsContent = document.getElementById('projectDetailsContent');
+            detailsContent.innerHTML = `
+                <h2>${project.title}</h2>
+                <p>${project.description}</p>
+                <div class="project-meta">
+                    <span>Work Mode: ${project.workMode}</span>
+                    <span>Members: ${project.numberOfMembers}</span>
+                    <span>Skills Required: ${project.skills.join(', ')}</span>
+                </div>
+            `;
+
+            // Conditionally show application or review section
+            if (!isUserProject && project.visibility === 'public') {
+                document.getElementById('applicationSection').style.display = 'block';
+                setupApplicationButton(project);
+            } else if (isUserProject) {
+                document.getElementById('reviewSection').style.display = 'block';
+                loadPendingApplications();
+            }
+        }
+
+        function setupApplicationButton(project) {
+            const applyButton = document.getElementById('applyButton');
+            applyButton.onclick = async () => {
+                const applicationMessage = document.getElementById('applicationMessage').value;
+
+                try {
+                    const applicationData = {
+                        userId: currentUser.uid,
+                        usn: currentUser.displayName,
+                        message: applicationMessage,
+                        status: 'pending',
+                        appliedAt: new Date()
+                    };
+
+                    const projectRef = doc(db, 'projects', projectId);
+                    await updateDoc(projectRef, {
+                        pendingApplications: arrayUnion(applicationData)
+                    });
+
+                    alert('Application submitted successfully!');
+                    document.getElementById('applicationMessage').value = '';
+                } catch (error) {
+                    console.error('Error submitting application:', error);
+                    alert('Failed to submit application');
+                }
+            };
+        }
+
+        async function loadPendingApplications() {
+            try {
+                const projectRef = doc(db, 'userProjects', currentUser.uid, 'projects', projectId);
+                const projectDoc = await getDoc(projectRef);
+
+                if (projectDoc.exists()) {
+                    const projectData = projectDoc.data();
+                    const pendingList = document.getElementById('pendingApplicationsList');
+                    
+                    if (projectData.pendingApplications && projectData.pendingApplications.length > 0) {
+                        pendingList.innerHTML = projectData.pendingApplications.map(app => `
+                            <div class="application-card">
+                                <p>USN: ${app.usn}</p>
+                                <p>Message: ${app.message}</p>
+                                <div class="application-actions">
+                                    <button onclick="approveApplication('${app.userId}')">Approve</button>
+                                    <button onclick="rejectApplication('${app.userId}')">Reject</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        pendingList.innerHTML = '<p>No pending applications</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading applications:', error);
+            }
+        }
+
+        // Attach global functions for approval/rejection
+        window.approveApplication = async (userId) => {
+            try {
+                const projectRef = doc(db, 'userProjects', currentUser.uid, 'projects', projectId);
+                
+                // Update project members and remove from pending
+                await updateDoc(projectRef, {
+                    numberOfMembers: increment(1),
+                    pendingApplications: arrayRemove(
+                        projectRef.pendingApplications.find(app => app.userId === userId)
+                    ),
+                    approvedMembers: arrayUnion(userId)
+                });
+
+                // Add project to user's projects
+                const userProjectRef = doc(db, 'userProjects', userId, 'projects', projectId);
+                await setDoc(userProjectRef, projectRef.data());
+
+                alert('Application approved!');
+                loadPendingApplications();
+            } catch (error) {
+                console.error('Error approving application:', error);
+            }
+        };
+
+        window.rejectApplication = async (userId) => {
+            try {
+                const projectRef = doc(db, 'userProjects', currentUser.uid, 'projects', projectId);
+                
+                // Remove from pending applications
+                await updateDoc(projectRef, {
+                    pendingApplications: arrayRemove(
+                        projectRef.pendingApplications.find(app => app.userId === userId)
+                    )
+                });
+
+                alert('Application rejected');
+                loadPendingApplications();
+            } catch (error) {
+                console.error('Error rejecting application:', error);
+            }
+        };
+    </script>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.querySelector('.theme-toggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            const currentTheme = localStorage.getItem('theme') || 
+                                (prefersDarkScheme.matches ? 'dark' : 'light');
+            
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.getAttribute('data-theme') === 'light' 
+                                ? 'dark' 
+                                : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        });
+    </script>
+</body>
+</html>
+

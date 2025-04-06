@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlapping Boxes</title>
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --secondary-color: #f4f4f4;
+            --accent-color: #414141;
+            --highlight-color: #ff0000;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .box {
+            position: relative;
+            background-color: var(--secondary-color);
+            border-radius: 20px;
+            padding: 20px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0px 4px 10px var(--shadow-color);
+        }
+
+        .box img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .box h2 {
+            font-size: 1.5rem;
+            margin: 10px 0;
+        }
+
+        .box p {
+            margin: 5px 0;
+            color: var(--accent-color);
+        }
+
+        .edit-icon {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: var(--highlight-color);
+            cursor: pointer;
+        }
+
+        .box_insider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            background-color: var(--primary-color);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            box-shadow: 0px 8px 15px var(--shadow-color);
+            display: none;
+            z-index: 10;
+        }
+
+        .box_insider h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--highlight-color);
+        }
+
+        .box_insider p {
+            margin: 5px 0;
+            color: var(--accent-color);
+        }
+
+        .box .show-details {
+            margin-top: 10px;
+            cursor: pointer;
+            text-decoration: underline;
+            color: var(--highlight-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <img src="https://via.placeholder.com/100" alt="Profile Picture">
+        <h2>Student Name</h2>
+        <p>USN: 12345</p>
+        <span class="edit-icon">&#9998; Edit</span>
+        <span class="show-details">View More Details</span>
+
+        <!-- Overlay Box -->
+        <div class="box_insider" id="overlay">
+            <h3>Student Details</h3>
+            <p>Email: student@example.com</p>
+            <p>Phone: +123456789</p>
+            <p>Address: 123 Example Street</p>
+        </div>
+    </div>
+
+    <script>
+        const showDetails = document.querySelector('.show-details');
+        const overlay = document.getElementById('overlay');
+
+        showDetails.addEventListener('click', () => {
+            overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+        });
+    </script>
+</body>
+</html>
+
