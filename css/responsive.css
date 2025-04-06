@@ -1,0 +1,70 @@
+/* Mobile/Tablet Styles */
+@media (max-width: 900px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav {
+    margin: 0 1rem;
+    padding: 1rem;
+  }
+
+  /* Add overlay as a separate element */
+  .nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+    z-index: 999;
+  }
+
+  .nav-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -250px;
+    height: 100vh;
+    width: 250px;
+    flex-direction: column;
+    background-color: var(--secondary-color);
+    padding: 4rem 2rem 2rem;
+    transition: all 0.3s ease-in-out;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  .nav-links.active {
+    right: 0;
+  }
+
+  .nav-link {
+    padding: 1rem 0;
+    width: 100%;
+    text-align: left;
+    color: var(--primary-color);
+  }
+
+  .btn {
+    width: 100%;
+    margin: 1rem 0;
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 901px) and (max-width: 1024px) {
+  .nav {
+    margin: 0 1rem;
+  }
+}
+
